@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "748584405266",
+    "project_id": "civin-app-e2d99",
+    "storage_bucket": "civin-app-e2d99.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:748584405266:android:8c1b42158bab18e46d8bcb",
+        "android_client_info": {
+          "package_name": "com.civin.civin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrkVThALcBZlXbuGvQOdSlZEtYI6eSPx0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
