@@ -16,6 +16,10 @@ Local tests are self-contained: PHPUnit uses in-memory SQLite, the sync queue, a
 
 Production defaults in `.env.example` target MySQL, Predis-backed Redis queues/cache, and configurable broadcasting. Set `FIREBASE_CREDENTIALS` to an absolute path to a service-account JSON file outside the repository. Run a queue worker for queued verification mail and future asynchronous listeners.
 
+For Back4app Containers, use the repository-root `Dockerfile.back4app`, the
+dashboard variable template in `deploy/.env.back4app.example`, and the complete
+instructions in [`docs/back4app-deployment.md`](docs/back4app-deployment.md).
+
 ## Architecture and security
 
 Code is feature-first under `app/Features`. Controllers only coordinate validated requests, services own workflows, actions/events describe domain transitions, repositories isolate persistence boundaries, and resources control API output. Shared framework integration is limited to `app/Support`.

@@ -11,6 +11,17 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::job(new CalculateDailyRankings)->dailyAt('00:05');
-Schedule::job(new CalculateWeeklyRankings)->weeklyOn(1, '00:15');
-Schedule::job(new ExpireVipSubscriptions)->hourly();
+Schedule::job(new CalculateDailyRankings)
+    ->dailyAt('00:05')
+    ->onOneServer()
+    ->withoutOverlapping();
+
+Schedule::job(new CalculateWeeklyRankings)
+    ->weeklyOn(1, '00:15')
+    ->onOneServer()
+    ->withoutOverlapping();
+
+Schedule::job(new ExpireVipSubscriptions)
+    ->hourly()
+    ->onOneServer()
+    ->withoutOverlapping();
