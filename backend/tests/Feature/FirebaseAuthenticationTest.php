@@ -104,6 +104,59 @@ class FirebaseAuthenticationTest extends TestCase
         $this->assertNotNull($user->fresh()->last_login_at);
     }
 
+    public function test_apple_style_firebase_identity_issues_sanctum_session(): void
+    {
+        $this->fakeFirebase(new FirebaseIdentity(
+            uid: 'apple-firebase-uid-456',
+            email: 'hid.user@privaterelay.appleid.com',
+            name: 'Ada Lovelace',
+            avatar: null,
+            emailVerified: true,
+            expiresAt: now()->addHour(),
+        ));
+
+        $this->postJson('/api/v1/auth/firebase/login', [
+            ...$this->payload,
+            'id_token' => str_repeat('apple-token', 3),
+            'device_name' => 'iPhone 16 Pro',
+            'platform' => 'ios',
+        ])
+            ->assertOk()
+            ->assertJsonPath('user.email', 'hid.user@privaterelay.appleid.com')
+            ->assertJsonPath('profile.display_name', 'Ada Lovelace')
+            ->assertJsonStructure(['access_token', 'refresh_token', 'user', 'profile']);
+
+        $user = User::query()->where('firebase_uid', 'apple-firebase-uid-456')->firstOrFail();
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertFalse($user->is_guest);
+    }
+
+    public function test_apple_hide_my_email_without_name_still_creates_profile(): void
+    {
+        $this->fakeFirebase(new FirebaseIdentity(
+            uid: 'apple-firebase-uid-789',
+            email: 'relay@privaterelay.appleid.com',
+            name: null,
+            avatar: null,
+            emailVerified: true,
+            expiresAt: now()->addHour(),
+        ));
+
+        $this->postJson('/api/v1/auth/firebase/login', [
+            ...$this->payload,
+            'id_token' => str_repeat('apple-token-b', 2),
+            'platform' => 'ios',
+        ])
+            ->assertOk()
+            ->assertJsonPath('user.email', 'relay@privaterelay.appleid.com')
+            ->assertJsonPath('profile.display_name', 'relay');
+
+        $this->assertDatabaseHas('users', [
+            'firebase_uid' => 'apple-firebase-uid-789',
+            'email' => 'relay@privaterelay.appleid.com',
+        ]);
+    }
+
     public function test_new_firebase_login_revokes_old_tokens(): void
     {
         $first = $this->postJson('/api/v1/auth/firebase/login', $this->payload)->assertOk();

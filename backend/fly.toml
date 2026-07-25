@@ -33,7 +33,7 @@ kill_timeout = "120s"
 
 [processes]
   web = "apache2-foreground"
-  worker = "php artisan queue:work redis --queue=default --sleep=3 --tries=3 --backoff=5 --timeout=90 --max-time=3600"
+  worker = "php artisan queue:work redis --queue=security,analytics,default --sleep=3 --tries=3 --backoff=5 --timeout=90 --max-time=3600"
   scheduler = "php artisan schedule:work"
 
 [http_service]

@@ -30,7 +30,7 @@ Sanctum access lifetime is controlled by `SANCTUM_EXPIRATION`; refresh lifetime 
 
 ## API
 
-Public authentication: `POST /auth/register`, `/auth/login`, `/auth/guest`, `/auth/refresh`, `/auth/forgot-password`, `/auth/reset-password`; signed `GET /auth/verify-email/{user}/{hash}`.
+Public authentication: `POST /auth/register`, `/auth/login`, `/auth/firebase/login`, `/auth/guest`, `/auth/refresh`, `/auth/forgot-password`, `/auth/reset-password`; signed `GET /auth/verify-email/{user}/{hash}`. Firebase social providers (Google, Apple, phone, anonymous) all exchange a Firebase ID token at `/auth/firebase/login` for Sanctum access + refresh tokens.
 
 Authenticated authentication: `POST /auth/logout`, `/auth/firebase/link`, `/auth/email/verification-notification`; `DELETE /auth/account`.
 

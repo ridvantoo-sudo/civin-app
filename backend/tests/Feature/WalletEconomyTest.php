@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Features\Gifts\Events\GiftSent;
 use App\Features\Gifts\Models\Gift;
+use App\Features\Kyc\Models\KycSubmission;
 use App\Features\LiveChat\Models\LiveChatSetting;
 use App\Features\LiveStreaming\Models\LiveRoom;
 use App\Features\LiveStreaming\Models\LiveSession;
@@ -155,6 +156,7 @@ class WalletEconomyTest extends TestCase
         Event::fake([WalletUpdated::class]);
 
         $user = User::factory()->withDiamonds(250)->create();
+        $this->approveKycFor($user);
         $admin = User::factory()->create();
         $admin->forceFill(['is_admin' => true])->save();
 
@@ -196,6 +198,7 @@ class WalletEconomyTest extends TestCase
     public function test_withdraw_reject_does_not_deduct_diamonds(): void
     {
         $user = User::factory()->withDiamonds(80)->create();
+        $this->approveKycFor($user);
         $admin = User::factory()->create();
         $admin->forceFill(['is_admin' => true])->save();
 
@@ -240,6 +243,7 @@ class WalletEconomyTest extends TestCase
     public function test_security_checks_prevent_negative_balances_and_unauthorized_access(): void
     {
         $user = User::factory()->withCoins(10)->withDiamonds(5)->create();
+        $this->approveKycFor($user);
         $other = User::factory()->create();
         $guest = User::factory()->create(['is_guest' => true]);
 
@@ -307,6 +311,13 @@ class WalletEconomyTest extends TestCase
         $this->getJson('/api/v1/wallet/transactions')->assertUnauthorized();
         $this->postJson('/api/v1/wallet/recharge', [])->assertUnauthorized();
         $this->postJson('/api/v1/wallet/withdraw', [])->assertUnauthorized();
+    }
+
+    private function approveKycFor(User $user): void
+    {
+        KycSubmission::factory()->approved()->create([
+            'user_id' => $user->getKey(),
+        ]);
     }
 
     private function liveRoom(User $host, string $status = 'live'): LiveRoom

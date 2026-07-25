@@ -2,12 +2,18 @@
 
 namespace App\Features\Wallet\Repositories\Eloquent;
 
+use App\Features\Challenges\Models\UserChallengeProgress;
+use App\Features\CoinSeller\Models\CoinSellerSale;
 use App\Features\Gifts\Models\GiftTransaction;
 use App\Features\PkBattle\Models\PkReward;
 use App\Features\Users\Models\User;
 use App\Features\Wallet\DTOs\RechargeWalletData;
 use App\Features\Wallet\DTOs\RequestWithdrawData;
+use App\Features\Wallet\DTOs\ReviewOfflineRechargeData;
 use App\Features\Wallet\DTOs\ReviewWithdrawData;
+use App\Features\Wallet\DTOs\SubmitOfflineRechargeData;
+use App\Features\Wallet\Models\OfflineRechargeAuditLog;
+use App\Features\Wallet\Models\OfflineRechargeRequest;
 use App\Features\Wallet\Models\RechargeOrder;
 use App\Features\Wallet\Models\Wallet;
 use App\Features\Wallet\Models\WalletTransaction;
@@ -274,6 +280,115 @@ final class EloquentWalletRepository implements WalletRepository
         return $wallet->fresh();
     }
 
+    public function applyChallengeReward(
+        User $user,
+        UserChallengeProgress $progress,
+        int $coins,
+        int $diamonds,
+    ): Wallet {
+        $wallet = $this->lockForUser($user);
+        $coins = max(0, $coins);
+        $diamonds = max(0, $diamonds);
+
+        if ($coins > 0) {
+            $wallet->increment('coins_balance', $coins);
+            $this->audit(
+                userId: $user->getKey(),
+                type: WalletTransaction::TYPE_CHALLENGE_REWARD,
+                amount: $coins,
+                currency: WalletTransaction::CURRENCY_COINS,
+                referenceType: $progress->getMorphClass(),
+                referenceId: $progress->getKey(),
+                metadata: [
+                    'challenge_id' => $progress->challenge_id,
+                    'period_key' => $progress->period_key,
+                    'reward' => 'coins',
+                ],
+            );
+        }
+
+        if ($diamonds > 0) {
+            $wallet->increment('diamonds_balance', $diamonds);
+            $this->audit(
+                userId: $user->getKey(),
+                type: WalletTransaction::TYPE_CHALLENGE_REWARD,
+                amount: $diamonds,
+                currency: WalletTransaction::CURRENCY_DIAMONDS,
+                referenceType: $progress->getMorphClass(),
+                referenceId: $progress->getKey(),
+                metadata: [
+                    'challenge_id' => $progress->challenge_id,
+                    'period_key' => $progress->period_key,
+                    'reward' => 'diamonds',
+                ],
+            );
+        }
+
+        return $wallet->fresh() ?? $wallet;
+    }
+
+    public function applyCoinSellerCredit(
+        User $buyer,
+        CoinSellerSale $sale,
+        int $coins,
+        ?array $metadata = null,
+    ): Wallet {
+        $wallet = $this->lockForUser($buyer);
+        $wallet->increment('coins_balance', $coins);
+
+        $this->audit(
+            userId: $buyer->getKey(),
+            type: WalletTransaction::TYPE_COIN_SELLER_PURCHASE,
+            amount: $coins,
+            currency: WalletTransaction::CURRENCY_COINS,
+            referenceType: $sale->getMorphClass(),
+            referenceId: $sale->getKey(),
+            metadata: $metadata,
+        );
+
+        return $wallet->fresh() ?? $wallet;
+    }
+
+    public function applyGrowthReward(
+        User $user,
+        \Illuminate\Database\Eloquent\Model $source,
+        int $coins,
+        int $diamonds = 0,
+        ?array $metadata = null,
+    ): Wallet {
+        $wallet = $this->lockForUser($user);
+        $coins = max(0, $coins);
+        $diamonds = max(0, $diamonds);
+
+        if ($coins > 0) {
+            $wallet->increment('coins_balance', $coins);
+            $this->audit(
+                userId: $user->getKey(),
+                type: WalletTransaction::TYPE_GROWTH_REWARD,
+                amount: $coins,
+                currency: WalletTransaction::CURRENCY_COINS,
+                referenceType: $source->getMorphClass(),
+                referenceId: $source->getKey(),
+                metadata: $metadata,
+            );
+        }
+
+        if ($diamonds > 0) {
+            $wallet->increment('diamonds_balance', $diamonds);
+            $this->audit(
+                userId: $user->getKey(),
+                type: WalletTransaction::TYPE_GROWTH_REWARD,
+                amount: $diamonds,
+                currency: WalletTransaction::CURRENCY_DIAMONDS,
+                referenceType: $source->getMorphClass(),
+                referenceId: $source->getKey(),
+                metadata: $metadata,
+            );
+        }
+
+        return $wallet->fresh() ?? $wallet;
+    }
+
     public function pendingWithdrawals(int $perPage): LengthAwarePaginator
     {
         return WithdrawRequest::query()
@@ -281,6 +396,173 @@ final class EloquentWalletRepository implements WalletRepository
             ->with(['user.profile', 'user.socialStatus'])
             ->latest('created_at')
             ->paginate($perPage);
+    }
+
+    public function submitOfflineRecharge(User $user, SubmitOfflineRechargeData $data): OfflineRechargeRequest
+    {
+        return DB::transaction(function () use ($user, $data): OfflineRechargeRequest {
+            $duplicate = OfflineRechargeRequest::query()
+                ->where('user_id', $user->getKey())
+                ->where('reference_number', $data->referenceNumber)
+                ->whereIn('status', [
+                    OfflineRechargeRequest::STATUS_PENDING,
+                    OfflineRechargeRequest::STATUS_APPROVED,
+                ])
+                ->lockForUpdate()
+                ->exists();
+
+            if ($duplicate) {
+                throw ValidationException::withMessages([
+                    'reference_number' => 'This payment reference has already been submitted.',
+                ]);
+            }
+
+            $request = OfflineRechargeRequest::query()->create([
+                'user_id' => $user->getKey(),
+                'coins' => $data->coins,
+                'amount' => $data->amount,
+                'currency' => strtoupper($data->currency),
+                'reference_number' => $data->referenceNumber,
+                'receipt_path' => $data->receiptPath,
+                'status' => OfflineRechargeRequest::STATUS_PENDING,
+                'approved_by' => null,
+                'admin_notes' => null,
+                'reviewed_at' => null,
+                'created_at' => now(),
+            ]);
+
+            $this->writeOfflineAudit(
+                request: $request,
+                actorId: $user->getKey(),
+                action: OfflineRechargeAuditLog::ACTION_SUBMITTED,
+                metadata: array_filter([
+                    'coins' => $data->coins,
+                    'amount' => $data->amount,
+                    'currency' => strtoupper($data->currency),
+                    'reference_number' => $data->referenceNumber,
+                    ...($data->metadata ?? []),
+                ], fn ($value) => $value !== null),
+            );
+
+            return $request->fresh(['user', 'approver']);
+        });
+    }
+
+    public function reviewOfflineRecharge(
+        OfflineRechargeRequest $request,
+        User $reviewer,
+        ReviewOfflineRechargeData $data,
+    ): OfflineRechargeRequest {
+        return DB::transaction(function () use ($request, $reviewer, $data): OfflineRechargeRequest {
+            $locked = OfflineRechargeRequest::query()->lockForUpdate()->findOrFail($request->getKey());
+
+            if ($locked->status !== OfflineRechargeRequest::STATUS_PENDING) {
+                throw ValidationException::withMessages([
+                    'status' => 'Only pending offline recharge requests can be reviewed.',
+                ]);
+            }
+
+            if ($data->status === OfflineRechargeRequest::STATUS_REJECTED) {
+                $locked->forceFill([
+                    'status' => OfflineRechargeRequest::STATUS_REJECTED,
+                    'approved_by' => $reviewer->getKey(),
+                    'admin_notes' => $data->notes,
+                    'reviewed_at' => now(),
+                ])->save();
+
+                $this->writeOfflineAudit(
+                    request: $locked,
+                    actorId: $reviewer->getKey(),
+                    action: OfflineRechargeAuditLog::ACTION_REJECTED,
+                    metadata: array_filter([
+                        'notes' => $data->notes,
+                    ], fn ($value) => $value !== null),
+                );
+
+                return $locked->fresh(['user', 'approver']);
+            }
+
+            if ($data->status !== OfflineRechargeRequest::STATUS_APPROVED) {
+                throw ValidationException::withMessages([
+                    'status' => 'Offline recharge review status is invalid.',
+                ]);
+            }
+
+            $owner = User::query()->findOrFail($locked->user_id);
+            $wallet = $this->lockForUser($owner);
+            $wallet->increment('coins_balance', $locked->coins);
+
+            $this->audit(
+                userId: $owner->getKey(),
+                type: WalletTransaction::TYPE_OFFLINE_RECHARGE,
+                amount: $locked->coins,
+                currency: WalletTransaction::CURRENCY_COINS,
+                referenceType: $locked->getMorphClass(),
+                referenceId: $locked->getKey(),
+                metadata: array_filter([
+                    'amount' => $locked->amount,
+                    'currency' => $locked->currency,
+                    'reference_number' => $locked->reference_number,
+                    'approved_by' => $reviewer->getKey(),
+                    'notes' => $data->notes,
+                ], fn ($value) => $value !== null),
+            );
+
+            $locked->forceFill([
+                'status' => OfflineRechargeRequest::STATUS_APPROVED,
+                'approved_by' => $reviewer->getKey(),
+                'admin_notes' => $data->notes,
+                'reviewed_at' => now(),
+            ])->save();
+
+            $this->writeOfflineAudit(
+                request: $locked,
+                actorId: $reviewer->getKey(),
+                action: OfflineRechargeAuditLog::ACTION_APPROVED,
+                metadata: array_filter([
+                    'coins' => $locked->coins,
+                    'notes' => $data->notes,
+                ], fn ($value) => $value !== null),
+            );
+
+            return $locked->fresh(['user', 'approver']);
+        });
+    }
+
+    public function offlineRechargesForUser(User $user, int $perPage): LengthAwarePaginator
+    {
+        return OfflineRechargeRequest::query()
+            ->where('user_id', $user->getKey())
+            ->with(['approver'])
+            ->latest('created_at')
+            ->paginate($perPage);
+    }
+
+    public function pendingOfflineRecharges(int $perPage): LengthAwarePaginator
+    {
+        return OfflineRechargeRequest::query()
+            ->where('status', OfflineRechargeRequest::STATUS_PENDING)
+            ->with(['user.profile', 'user.socialStatus'])
+            ->latest('created_at')
+            ->paginate($perPage);
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $metadata
+     */
+    private function writeOfflineAudit(
+        OfflineRechargeRequest $request,
+        string $actorId,
+        string $action,
+        ?array $metadata,
+    ): OfflineRechargeAuditLog {
+        return OfflineRechargeAuditLog::query()->create([
+            'offline_recharge_request_id' => $request->getKey(),
+            'actor_id' => $actorId,
+            'action' => $action,
+            'metadata' => $metadata === null || $metadata === [] ? null : $metadata,
+            'created_at' => now(),
+        ]);
     }
 
     private function audit(

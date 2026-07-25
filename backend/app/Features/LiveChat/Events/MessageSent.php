@@ -49,6 +49,7 @@ final class MessageSent implements ShouldBroadcast, ShouldDispatchAfterCommit
                     'country' => $profile?->relationLoaded('country') ? $profile->country : null,
                     'level' => $profile?->level,
                     'is_vip' => (bool) $profile?->is_vip,
+                    'is_svip' => (bool) $profile?->is_svip,
                     'is_private' => (bool) $profile?->is_private,
                     'followers_count' => $profile?->followers_count ?? 0,
                     'following_count' => $profile?->following_count ?? 0,

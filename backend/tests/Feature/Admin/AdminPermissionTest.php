@@ -53,7 +53,9 @@ class AdminPermissionTest extends TestCase
         $this->assertFalse($moderator->can(AdminPermission::MANAGE_WALLETS));
         $this->assertFalse($moderator->can(AdminPermission::MANAGE_GIFTS));
         $this->assertFalse($moderator->can(AdminPermission::MANAGE_VIP));
+        $this->assertFalse($moderator->can(AdminPermission::MANAGE_SVIP));
         $this->assertFalse($moderator->can(AdminPermission::MANAGE_AGENCIES));
+        $this->assertFalse($moderator->can(AdminPermission::VIEW_ANALYTICS));
     }
 
     public function test_finance_admin_permissions_are_scoped(): void
@@ -64,6 +66,8 @@ class AdminPermissionTest extends TestCase
         $this->assertTrue($finance->can(AdminPermission::APPROVE_WITHDRAWALS));
         $this->assertTrue($finance->can(AdminPermission::MANAGE_GIFTS));
         $this->assertTrue($finance->can(AdminPermission::MANAGE_VIP));
+        $this->assertTrue($finance->can(AdminPermission::MANAGE_SVIP));
+        $this->assertTrue($finance->can(AdminPermission::VIEW_ANALYTICS));
         $this->assertFalse($finance->can(AdminPermission::MANAGE_USERS));
         $this->assertFalse($finance->can(AdminPermission::REVIEW_REPORTS));
     }

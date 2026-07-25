@@ -29,6 +29,8 @@ class LiveRoomResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    protected static ?string $navigationLabel = 'Live Rooms';
+
     public static function canViewAny(): bool
     {
         return static::canAccessWithPermission(AdminPermission::MANAGE_LIVE_ROOMS);

@@ -5,6 +5,7 @@ namespace App\Features\Countries\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Country extends Model
@@ -16,5 +17,10 @@ class Country extends Model
     protected function casts(): array
     {
         return ['active' => 'boolean'];
+    }
+
+    public function regions(): HasMany
+    {
+        return $this->hasMany(CountryRegion::class);
     }
 }

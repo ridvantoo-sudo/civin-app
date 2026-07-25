@@ -4,6 +4,7 @@ namespace App\Features\Ranking\Http\Controllers;
 
 use App\Features\Ranking\Actions\ListGifterRankings;
 use App\Features\Ranking\Actions\ListHostRankings;
+use App\Features\Ranking\Actions\ListLevelRankings;
 use App\Features\Ranking\Actions\ListPkRankings;
 use App\Features\Ranking\Actions\ListVoiceRankings;
 use App\Features\Ranking\Http\Requests\ListRankingsRequest;
@@ -57,6 +58,20 @@ final class RankingController extends Controller
     }
 
     public function voice(ListRankingsRequest $request, ListVoiceRankings $action): AnonymousResourceCollection
+    {
+        $this->authorize('viewAny', Ranking::class);
+
+        return RankingEntryResource::collection(
+            $action->execute(
+                $request->user(),
+                $request->period(),
+                $request->country(),
+                $request->limit(),
+            ),
+        );
+    }
+
+    public function levels(ListRankingsRequest $request, ListLevelRankings $action): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Ranking::class);
 

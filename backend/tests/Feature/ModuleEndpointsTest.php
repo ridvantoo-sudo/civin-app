@@ -21,7 +21,10 @@ class ModuleEndpointsTest extends TestCase
         Setting::factory()->create(['key' => 'public_key', 'value' => 'visible', 'is_public' => true]);
         Setting::factory()->create(['key' => 'secret_key', 'value' => 'hidden', 'is_public' => false]);
 
-        $this->getJson('/api/v1/countries')->assertOk()->assertJsonCount(1, 'data');
+        $this->getJson('/api/v1/countries')
+            ->assertOk()
+            ->assertJsonFragment(['id' => $country->id, 'name' => 'Türkiye'])
+            ->assertJsonMissing(['active' => false]);
         $this->getJson('/api/v1/countries/'.$country->id)->assertOk();
         $this->getJson('/api/v1/settings')->assertOk()
             ->assertJsonPath('data.public_key', 'visible')

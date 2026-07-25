@@ -3,6 +3,7 @@
 namespace App\Features\Profiles\Models;
 
 use App\Features\Countries\Models\Country;
+use App\Features\Countries\Models\CountryRegion;
 use App\Features\Users\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,6 +18,7 @@ class Profile extends Model
     protected $fillable = [
         'user_id',
         'country_id',
+        'country_region_id',
         'display_name',
         'bio',
         'avatar_url',
@@ -25,6 +27,7 @@ class Profile extends Model
         'gender',
         'level',
         'is_vip',
+        'is_svip',
         'is_private',
         'followers_count',
         'following_count',
@@ -37,6 +40,7 @@ class Profile extends Model
             'birth_date' => 'date',
             'level' => 'integer',
             'is_vip' => 'boolean',
+            'is_svip' => 'boolean',
             'is_private' => 'boolean',
             'followers_count' => 'integer',
             'following_count' => 'integer',
@@ -52,5 +56,10 @@ class Profile extends Model
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
+    }
+
+    public function countryRegion(): BelongsTo
+    {
+        return $this->belongsTo(CountryRegion::class);
     }
 }

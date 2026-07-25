@@ -4,6 +4,8 @@ namespace App\Features\Ranking\Repositories\Eloquent;
 
 use App\Features\Followers\Models\Follow;
 use App\Features\Gifts\Models\GiftTransaction;
+use App\Features\Levels\Models\UserLevelProgress;
+use App\Features\Levels\Models\XpTransaction;
 use App\Features\PkBattle\Models\PkBattle;
 use App\Features\Profiles\Models\Profile;
 use App\Features\Ranking\DTOs\RankingQueryData;
@@ -221,6 +223,36 @@ final class EloquentRankingRepository implements RankingRepository
             ->groupBy('followed_id')
             ->orderByDesc('score')
             ->orderBy('followed_id')
+            ->limit($limit)
+            ->get();
+
+        return $this->mapScores($rows);
+    }
+
+    public function aggregateUserLevels(?CarbonInterface $from, ?CarbonInterface $to, ?string $country, int $limit): Collection
+    {
+        if ($from === null && $to === null) {
+            $rows = UserLevelProgress::query()
+                ->selectRaw('user_id, xp_total as score')
+                ->where('xp_total', '>', 0)
+                ->when($country, fn (Builder $query, string $value) => $this->applyCountryFilter($query, $value, 'user_id'))
+                ->orderByDesc('xp_total')
+                ->orderByDesc('level')
+                ->orderBy('user_id')
+                ->limit($limit)
+                ->get();
+
+            return $this->mapScores($rows);
+        }
+
+        $rows = XpTransaction::query()
+            ->selectRaw('user_id, SUM(amount) as score')
+            ->when($from, fn (Builder $query) => $query->where('created_at', '>=', $from))
+            ->when($to, fn (Builder $query) => $query->where('created_at', '<=', $to))
+            ->when($country, fn (Builder $query, string $value) => $this->applyCountryFilter($query, $value, 'user_id'))
+            ->groupBy('user_id')
+            ->orderByDesc('score')
+            ->orderBy('user_id')
             ->limit($limit)
             ->get();
 

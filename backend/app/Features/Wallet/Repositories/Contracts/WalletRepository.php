@@ -2,16 +2,22 @@
 
 namespace App\Features\Wallet\Repositories\Contracts;
 
+use App\Features\Challenges\Models\UserChallengeProgress;
+use App\Features\CoinSeller\Models\CoinSellerSale;
 use App\Features\Gifts\Models\GiftTransaction;
 use App\Features\PkBattle\Models\PkReward;
 use App\Features\Users\Models\User;
 use App\Features\Wallet\DTOs\RechargeWalletData;
 use App\Features\Wallet\DTOs\RequestWithdrawData;
+use App\Features\Wallet\DTOs\ReviewOfflineRechargeData;
 use App\Features\Wallet\DTOs\ReviewWithdrawData;
+use App\Features\Wallet\DTOs\SubmitOfflineRechargeData;
+use App\Features\Wallet\Models\OfflineRechargeRequest;
 use App\Features\Wallet\Models\RechargeOrder;
 use App\Features\Wallet\Models\Wallet;
 use App\Features\Wallet\Models\WithdrawRequest;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Model;
 
 interface WalletRepository
 {
@@ -31,9 +37,51 @@ interface WalletRepository
 
     public function reviewWithdraw(WithdrawRequest $request, User $reviewer, ReviewWithdrawData $data): WithdrawRequest;
 
+    public function submitOfflineRecharge(User $user, SubmitOfflineRechargeData $data): OfflineRechargeRequest;
+
+    public function reviewOfflineRecharge(
+        OfflineRechargeRequest $request,
+        User $reviewer,
+        ReviewOfflineRechargeData $data,
+    ): OfflineRechargeRequest;
+
+    public function offlineRechargesForUser(User $user, int $perPage): LengthAwarePaginator;
+
+    public function pendingOfflineRecharges(int $perPage): LengthAwarePaginator;
+
     public function applyGiftTransfer(User $sender, User $receiver, GiftTransaction $giftTransaction, int $coins): array;
 
     public function applyPkReward(User $winner, PkReward $reward, int $amount): Wallet;
+
+    public function applyChallengeReward(
+        User $user,
+        UserChallengeProgress $progress,
+        int $coins,
+        int $diamonds,
+    ): Wallet;
+
+    /**
+     * @param  array<string, mixed>|null  $metadata
+     */
+    public function applyCoinSellerCredit(
+        User $buyer,
+        CoinSellerSale $sale,
+        int $coins,
+        ?array $metadata = null,
+    ): Wallet;
+
+    /**
+     * Credit coins/diamonds for Growth rewards (referral, invite, promo).
+     *
+     * @param  array<string, mixed>|null  $metadata
+     */
+    public function applyGrowthReward(
+        User $user,
+        Model $source,
+        int $coins,
+        int $diamonds = 0,
+        ?array $metadata = null,
+    ): Wallet;
 
     /** @return list<WithdrawRequest> */
     public function pendingWithdrawals(int $perPage): LengthAwarePaginator;

@@ -10,7 +10,11 @@ final class EloquentCountryRepository implements CountryRepository
 {
     public function active(): Collection
     {
-        return Country::query()->where('active', true)->orderBy('name')->get();
+        return Country::query()
+            ->with(['regions' => fn ($query) => $query->where('active', true)->orderBy('name')])
+            ->where('active', true)
+            ->orderBy('name')
+            ->get();
     }
 
     public function findActive(string $id): Country

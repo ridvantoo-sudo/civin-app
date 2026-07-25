@@ -29,6 +29,11 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <!-- The anti-cheat platform observes every domain event. It is off by
+             default here so unrelated suites are not taxed by it; the security
+             suite turns it on explicitly. -->
+        <env name="SECURITY_ENABLED" value="false"/>
+        <env name="SECURITY_HASH_SALT" value="civin-security-test"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>

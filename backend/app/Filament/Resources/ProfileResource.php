@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Features\Admin\Support\AdminPermission;
 use App\Features\Profiles\Models\Profile;
 use App\Filament\Concerns\AuthorizesAdminAccess;
+use App\Filament\Forms\Components\CountryLocationFields;
 use App\Filament\Resources\ProfileResource\Pages;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -54,6 +55,7 @@ class ProfileResource extends Resource
                     ->required()
                     ->disabledOn('edit'),
                 Forms\Components\TextInput::make('display_name')->required()->maxLength(255),
+                ...CountryLocationFields::make(),
                 Forms\Components\Textarea::make('bio')->rows(3)->columnSpanFull(),
                 Forms\Components\TextInput::make('avatar_url')->url()->maxLength(2048),
                 Forms\Components\TextInput::make('cover_image_url')->url()->maxLength(2048),
@@ -61,6 +63,7 @@ class ProfileResource extends Resource
                 Forms\Components\TextInput::make('gender')->maxLength(32),
                 Forms\Components\TextInput::make('level')->numeric()->minValue(1)->required(),
                 Forms\Components\Toggle::make('is_vip'),
+                Forms\Components\Toggle::make('is_svip'),
                 Forms\Components\Toggle::make('is_private'),
             ])->columns(2);
     }
@@ -73,6 +76,7 @@ class ProfileResource extends Resource
                 Tables\Columns\TextColumn::make('display_name')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('level')->sortable(),
                 Tables\Columns\IconColumn::make('is_vip')->boolean(),
+                Tables\Columns\IconColumn::make('is_svip')->boolean(),
                 Tables\Columns\IconColumn::make('is_private')->boolean(),
                 Tables\Columns\TextColumn::make('followers_count')->numeric()->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')->dateTime()->toggleable(isToggledHiddenByDefault: true),

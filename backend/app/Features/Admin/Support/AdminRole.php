@@ -37,13 +37,22 @@ final class AdminRole
             self::FINANCE_ADMIN => [
                 AdminPermission::MANAGE_WALLETS,
                 AdminPermission::APPROVE_WITHDRAWALS,
+                AdminPermission::APPROVE_OFFLINE_RECHARGES,
                 AdminPermission::MANAGE_GIFTS,
                 AdminPermission::MANAGE_VIP,
+                AdminPermission::MANAGE_SVIP,
+                AdminPermission::MANAGE_ADS,
+                AdminPermission::MANAGE_MARKETPLACE,
+                AdminPermission::MANAGE_COIN_SELLERS,
+                AdminPermission::MANAGE_GAMES,
+                AdminPermission::REVIEW_KYC,
+                AdminPermission::VIEW_ANALYTICS,
             ],
             self::SUPPORT_ADMIN => [
                 AdminPermission::MANAGE_USERS,
                 AdminPermission::REVIEW_REPORTS,
                 AdminPermission::MANAGE_AGENCIES,
+                AdminPermission::REVIEW_KYC,
             ],
         ];
     }

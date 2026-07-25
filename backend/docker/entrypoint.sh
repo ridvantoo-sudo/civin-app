@@ -27,6 +27,8 @@ fi
 if [ "${BACK4APP_RUN_SEEDERS:-false}" = "true" ]; then
     php artisan db:seed --class=CountrySeeder --force
     php artisan db:seed --class=SettingSeeder --force
+    php artisan db:seed --class=LevelSystemSeeder --force
+    php artisan db:seed --class=ChallengeSystemSeeder --force
     php artisan db:seed --class=AdminRoleSeeder --force
 fi
 

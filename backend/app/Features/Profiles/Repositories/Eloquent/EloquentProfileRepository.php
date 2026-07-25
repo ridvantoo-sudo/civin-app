@@ -18,18 +18,18 @@ final class EloquentProfileRepository implements ProfileRepository
 
     public function forUser(User $user): Profile
     {
-        return $user->profile()->with('country', 'user.socialStatus')->firstOrFail();
+        return $user->profile()->with('country', 'countryRegion', 'user.socialStatus')->firstOrFail();
     }
 
     public function publicForUser(User $user): Profile
     {
-        return $user->profile()->with('country', 'user.socialStatus')->firstOrFail();
+        return $user->profile()->with('country', 'countryRegion', 'user.socialStatus')->firstOrFail();
     }
 
     public function update(Profile $profile, array $attributes): Profile
     {
         $profile->update($attributes);
 
-        return $profile->fresh()->load('country', 'user.socialStatus');
+        return $profile->fresh()->load('country', 'countryRegion', 'user.socialStatus');
     }
 }

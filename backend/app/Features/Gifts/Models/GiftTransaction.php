@@ -4,6 +4,7 @@ namespace App\Features\Gifts\Models;
 
 use App\Features\LiveStreaming\Models\LiveRoom;
 use App\Features\Users\Models\User;
+use App\Features\VoiceRoom\Models\VoiceRoom;
 use Database\Factories\GiftTransactionFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,7 +19,7 @@ class GiftTransaction extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'sender_id', 'receiver_id', 'room_id', 'gift_id', 'quantity', 'coins', 'metadata', 'created_at',
+        'sender_id', 'receiver_id', 'room_id', 'voice_room_id', 'gift_id', 'quantity', 'coins', 'metadata', 'created_at',
     ];
 
     protected function casts(): array
@@ -44,6 +45,16 @@ class GiftTransaction extends Model
     public function room(): BelongsTo
     {
         return $this->belongsTo(LiveRoom::class, 'room_id');
+    }
+
+    public function voiceRoom(): BelongsTo
+    {
+        return $this->belongsTo(VoiceRoom::class, 'voice_room_id');
+    }
+
+    public function broadcastRoomId(): ?string
+    {
+        return $this->voice_room_id ?? $this->room_id;
     }
 
     public function gift(): BelongsTo

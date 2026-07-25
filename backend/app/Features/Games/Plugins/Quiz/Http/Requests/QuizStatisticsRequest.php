@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Features\Games\Plugins\Quiz\Http\Requests;
+
+use App\Features\Games\Plugins\Quiz\Models\QuizSession;
+use Illuminate\Foundation\Http\FormRequest;
+
+final class QuizStatisticsRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()?->can('viewStatistics', QuizSession::class) ?? false;
+    }
+
+    /** @return array<string, mixed> */
+    public function rules(): array
+    {
+        return [];
+    }
+}

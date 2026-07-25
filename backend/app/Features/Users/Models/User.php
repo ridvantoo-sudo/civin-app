@@ -7,7 +7,9 @@ use App\Features\Admin\Support\AdminRole;
 use App\Features\Blocking\Models\Block;
 use App\Features\Devices\Models\Device;
 use App\Features\Followers\Models\Follow;
+use App\Features\GeoDiscovery\Models\UserLocation;
 use App\Features\Gifts\Models\GiftTransaction;
+use App\Features\Kyc\Models\KycSubmission;
 use App\Features\LiveChat\Models\LiveChatModerator;
 use App\Features\LiveChat\Models\LiveMessage;
 use App\Features\LiveStreaming\Models\LiveRoom;
@@ -17,6 +19,7 @@ use App\Features\Reports\Models\Report;
 use App\Features\Settings\Models\UserSetting;
 use App\Features\UserStatus\Models\UserStatus;
 use App\Features\Wallet\Models\Wallet;
+use App\Features\Wallet\Models\WalletTransaction;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasName;
@@ -107,6 +110,16 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
         return $this->hasOne(Wallet::class);
     }
 
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(WalletTransaction::class);
+    }
+
+    public function kycSubmission(): HasOne
+    {
+        return $this->hasOne(KycSubmission::class);
+    }
+
     public function devices(): HasMany
     {
         return $this->hasMany(Device::class);
@@ -140,6 +153,11 @@ class User extends Authenticatable implements FilamentUser, HasName, MustVerifyE
     public function socialStatus(): HasOne
     {
         return $this->hasOne(UserStatus::class);
+    }
+
+    public function location(): HasOne
+    {
+        return $this->hasOne(UserLocation::class);
     }
 
     public function hostedLiveRooms(): HasMany

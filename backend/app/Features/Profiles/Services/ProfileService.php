@@ -32,6 +32,11 @@ final readonly class ProfileService
             unset($attributes['birthday']);
         }
 
+        if (array_key_exists('country_id', $attributes)
+            && ! array_key_exists('country_region_id', $attributes)) {
+            $attributes['country_region_id'] = null;
+        }
+
         return $this->profiles->update($this->profiles->forUser($user), $attributes);
     }
 

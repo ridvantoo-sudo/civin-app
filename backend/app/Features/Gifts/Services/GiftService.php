@@ -5,10 +5,13 @@ namespace App\Features\Gifts\Services;
 use App\Features\Blocking\Repositories\Contracts\BlockRepository;
 use App\Features\Gifts\DTOs\SendGiftData;
 use App\Features\Gifts\Events\GiftSent;
+use App\Features\Gifts\Models\Gift;
 use App\Features\Gifts\Models\GiftTransaction;
 use App\Features\Gifts\Repositories\Contracts\GiftRepository;
 use App\Features\LiveStreaming\Models\LiveRoom;
+use App\Features\Svip\Services\SvipService;
 use App\Features\Users\Models\User;
+use App\Features\Vip\Services\VipService;
 use App\Features\Wallet\Events\GiftBalanceChanged;
 use App\Features\Wallet\Events\WalletUpdated;
 use App\Features\Wallet\Models\WalletTransaction;
@@ -31,6 +34,8 @@ final readonly class GiftService
         private GiftRepository $gifts,
         private BlockRepository $blocks,
         private WalletRepository $wallets,
+        private VipService $vips,
+        private SvipService $svips,
     ) {}
 
     public function catalog(): Collection
@@ -56,6 +61,8 @@ final readonly class GiftService
         if ($gift === null) {
             throw ValidationException::withMessages(['gift_id' => 'The selected gift is unavailable.']);
         }
+
+        $this->ensureMembershipAllowsGift($sender, $gift);
 
         $transaction = $this->gifts->send($room, $sender, $gift, $data);
 
@@ -105,6 +112,23 @@ final readonly class GiftService
     {
         if (! $this->gifts->isActiveParticipant($room, $user)) {
             throw new AuthorizationException('Only the host or an active viewer can send gifts.');
+        }
+    }
+
+    private function ensureMembershipAllowsGift(User $sender, Gift $gift): void
+    {
+        if ($gift->requiresSvip() && ! $this->svips->hasPrivilege($sender, 'exclusive_gifts')) {
+            throw ValidationException::withMessages([
+                'gift_id' => 'This gift is exclusive to SVIP members.',
+            ]);
+        }
+
+        if ($gift->requiresVip()
+            && ! $this->svips->hasPrivilege($sender, 'exclusive_gifts')
+            && ! $this->vips->hasPrivilege($sender, 'exclusive_gifts')) {
+            throw ValidationException::withMessages([
+                'gift_id' => 'This gift is exclusive to VIP members.',
+            ]);
         }
     }
 

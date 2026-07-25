@@ -9,6 +9,7 @@ use App\Features\Authentication\DTOs\RegisterData;
 use App\Features\Authentication\DTOs\TokenPair;
 use App\Features\Authentication\Events\AccountDeleted;
 use App\Features\Authentication\Events\FirebaseLinked;
+use App\Features\Authentication\Events\UserLoggedIn;
 use App\Features\Authentication\Events\UserRegistered;
 use App\Features\Authentication\Repositories\Contracts\RefreshTokenRepository;
 use App\Features\Devices\Actions\UpsertDevice;
@@ -59,10 +60,11 @@ final readonly class AuthenticationService
         $user = $this->users->findByLogin($data->login);
 
         if (! $user || ! $user->password || ! Hash::check($data->password, $user->password) || $user->status !== 'active') {
-            throw ValidationException::withMessages(['login' => ['The credentials are invalid.']]);
+            throw ValidationException::withMessages(['login' => [__('messages.invalid_credentials')]]);
         }
 
         $user = $this->users->update($user, ['last_login_at' => now()]);
+        event(new UserLoggedIn($user));
 
         return $this->issue($user, $data->device);
     }
@@ -142,6 +144,8 @@ final readonly class AuthenticationService
             'device_id' => $tokens->device->id,
             'ip_address' => $device->ipAddress,
         ]);
+
+        event(new UserLoggedIn($tokens->user));
 
         return $tokens;
     }

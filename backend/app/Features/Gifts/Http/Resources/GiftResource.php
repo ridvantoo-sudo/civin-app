@@ -16,6 +16,7 @@ final class GiftResource extends JsonResource
             'animation_url' => $this->animation_url,
             'coin_price' => $this->coin_price,
             'status' => $this->status,
+            'membership_required' => $this->membership_required,
             'animation' => $this->animation()->toArray(),
             'category' => new GiftCategoryResource($this->whenLoaded('category')),
         ];

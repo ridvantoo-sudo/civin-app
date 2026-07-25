@@ -78,7 +78,7 @@ final class AuthenticationController extends Controller
     {
         $this->logout->execute($request->user());
 
-        return response()->json(['message' => 'Logged out.']);
+        return response()->json(['message' => __('messages.logged_out')]);
     }
 
     public function me(Request $request): JsonResponse
@@ -96,7 +96,7 @@ final class AuthenticationController extends Controller
     {
         $this->forgotPassword->execute($request->validated('email'));
 
-        return response()->json(['message' => 'If the account exists, a reset link has been sent.']);
+        return response()->json(['message' => __('messages.password_reset_sent')]);
     }
 
     public function resetPassword(ResetPasswordRequest $request): JsonResponse

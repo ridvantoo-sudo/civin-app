@@ -18,15 +18,31 @@ class Gift extends Model
 
     public const STATUS_INACTIVE = 'inactive';
 
+    public const MEMBERSHIP_NONE = null;
+
+    public const MEMBERSHIP_VIP = 'vip';
+
+    public const MEMBERSHIP_SVIP = 'svip';
+
     public $timestamps = false;
 
     protected $fillable = [
-        'category_id', 'name', 'icon', 'animation_url', 'coin_price', 'status',
+        'category_id', 'name', 'icon', 'animation_url', 'coin_price', 'status', 'membership_required',
     ];
 
     protected function casts(): array
     {
         return ['coin_price' => 'integer'];
+    }
+
+    public function requiresVip(): bool
+    {
+        return $this->membership_required === self::MEMBERSHIP_VIP;
+    }
+
+    public function requiresSvip(): bool
+    {
+        return $this->membership_required === self::MEMBERSHIP_SVIP;
     }
 
     public function category(): BelongsTo

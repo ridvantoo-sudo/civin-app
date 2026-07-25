@@ -19,6 +19,8 @@ class AdminRoleSeeder extends Seeder
             Permission::findOrCreate($permission, 'web');
         }
 
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
         foreach (AdminRole::permissionMap() as $roleName => $permissions) {
             $role = Role::findOrCreate($roleName, 'web');
             $role->syncPermissions($permissions);

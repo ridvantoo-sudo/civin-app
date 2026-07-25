@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'unexpected_error' => 'Bir şeyler ters gitti.',
+    'no_internet' => 'İnternet bağlantısı yok.',
+    'empty_state' => 'Henüz gösterilecek bir şey yok.',
+    'language' => 'Dil',
+    'settings' => 'Ayarlar',
+    'login' => 'Giriş',
+    'logout' => 'Çıkış yap',
+    'retry' => 'Yeniden dene',
+    'cancel' => 'İptal',
+    'confirm' => 'Onayla',
+    'save' => 'Kaydet',
+    'language_changed' => 'Dil güncellendi',
+    'logged_out' => 'Çıkış yapıldı.',
+    'verification_notice_sent' => 'Doğrulama bildirimi gönderildi.',
+    'email_verified' => 'E-posta doğrulandı.',
+    'password_reset_sent' => 'Hesap varsa sıfırlama bağlantısı gönderildi.',
+    'invalid_credentials' => 'Kimlik bilgileri geçersiz.',
+    'only_followers_can_chat' => 'Bu canlı odada yalnızca takipçiler sohbet edebilir.',
+    'links_not_allowed' => 'Bu canlı odada bağlantılara izin verilmez.',
+    'duplicate_messages' => 'Yinelenen mesajlara izin verilmez.',
+    'sending_too_quickly' => 'Mesajları çok hızlı gönderiyorsun.',
+    'locale_updated' => 'Dil güncellendi.',
+    'settings_updated' => 'Ayarlar güncellendi.',
+];

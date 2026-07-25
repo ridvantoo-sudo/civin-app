@@ -14,7 +14,8 @@ final class GiftTransactionResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'room_id' => $this->room_id,
+            'room_id' => $this->broadcastRoomId(),
+            'room_type' => $this->voice_room_id === null ? 'live' : 'voice',
             'quantity' => $this->quantity,
             'coins' => $this->coins,
             'metadata' => $this->metadata,

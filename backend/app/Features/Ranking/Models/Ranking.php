@@ -24,12 +24,15 @@ class Ranking extends Model
 
     public const TYPE_POPULAR_USER = 'POPULAR_USER';
 
+    public const TYPE_USER_LEVEL = 'USER_LEVEL';
+
     public const TYPES = [
         self::TYPE_HOST_DIAMONDS,
         self::TYPE_TOP_GIFTER,
         self::TYPE_PK_WINNER,
         self::TYPE_VOICE_HOST,
         self::TYPE_POPULAR_USER,
+        self::TYPE_USER_LEVEL,
     ];
 
     public const PERIOD_DAILY = 'DAILY';

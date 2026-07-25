@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'unexpected_error' => 'حدث خطأ ما.',
+    'no_internet' => 'لا يوجد اتصال بالإنترنت.',
+    'empty_state' => 'لا يوجد شيء لعرضه بعد.',
+    'language' => 'اللغة',
+    'settings' => 'الإعدادات',
+    'login' => 'تسجيل الدخول',
+    'logout' => 'تسجيل الخروج',
+    'retry' => 'إعادة المحاولة',
+    'cancel' => 'إلغاء',
+    'confirm' => 'تأكيد',
+    'save' => 'حفظ',
+    'language_changed' => 'تم تحديث اللغة',
+    'logged_out' => 'تم تسجيل الخروج.',
+    'verification_notice_sent' => 'تم إرسال إشعار التحقق.',
+    'email_verified' => 'تم التحقق من البريد الإلكتروني.',
+    'password_reset_sent' => 'إذا كان الحساب موجودًا، فقد تم إرسال رابط إعادة التعيين.',
+    'invalid_credentials' => 'بيانات الاعتماد غير صحيحة.',
+    'only_followers_can_chat' => 'يمكن للمتابعين فقط الدردشة في هذه الغرفة المباشرة.',
+    'links_not_allowed' => 'الروابط غير مسموح بها في هذه الغرفة المباشرة.',
+    'duplicate_messages' => 'الرسائل المكررة غير مسموح بها.',
+    'sending_too_quickly' => 'أنت ترسل الرسائل بسرعة كبيرة.',
+    'locale_updated' => 'تم تحديث اللغة.',
+    'settings_updated' => 'تم تحديث الإعدادات.',
+];

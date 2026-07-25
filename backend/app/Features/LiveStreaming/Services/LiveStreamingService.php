@@ -7,7 +7,9 @@ use App\Features\LiveStreaming\DTOs\CreateLiveRoomData;
 use App\Features\LiveStreaming\DTOs\LiveRoomConnectionData;
 use App\Features\LiveStreaming\Events\LiveEnded;
 use App\Features\LiveStreaming\Events\LiveStarted;
+use App\Features\LiveStreaming\Events\LiveViewerLeft;
 use App\Features\LiveStreaming\Models\LiveRoom;
+use App\Features\LiveStreaming\Models\LiveViewer;
 use App\Features\LiveStreaming\Repositories\Contracts\LiveRoomRepository;
 use App\Features\Users\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -65,10 +67,26 @@ final readonly class LiveStreamingService
 
     public function leave(LiveRoom $room, User $viewer): LiveRoom
     {
+        $membership = LiveViewer::query()
+            ->where('room_id', $room->getKey())
+            ->where('user_id', $viewer->getKey())
+            ->whereNull('left_at')
+            ->first();
+
         $result = $this->rooms->leave($room, $viewer);
 
         if ($result['changed']) {
             $this->chat->recordViewerLeft($result['room'], $viewer, $result['room']->viewer_count);
+
+            if ($membership?->joined_at !== null) {
+                $leftAt = now();
+                LiveViewerLeft::dispatch(
+                    (string) $room->getKey(),
+                    (string) $viewer->getKey(),
+                    max(0, (int) $membership->joined_at->diffInSeconds($leftAt)),
+                    $membership->joined_at->toISOString(),
+                );
+            }
         }
 
         return $result['room'];

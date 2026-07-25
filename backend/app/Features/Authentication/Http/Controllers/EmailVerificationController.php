@@ -16,13 +16,13 @@ final class EmailVerificationController extends Controller
     {
         $this->verifyEmail->sendNotice($request->user());
 
-        return response()->json(['message' => 'Verification notice sent.']);
+        return response()->json(['message' => __('messages.verification_notice_sent')]);
     }
 
     public function verify(Request $request, User $user, string $hash): JsonResponse
     {
         $this->verifyEmail->execute($user, $hash);
 
-        return response()->json(['message' => 'Email verified.']);
+        return response()->json(['message' => __('messages.email_verified')]);
     }
 }

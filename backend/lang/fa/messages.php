@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'unexpected_error' => 'مشکلی پیش آمد.',
+    'no_internet' => 'اتصال اینترنت وجود ندارد.',
+    'empty_state' => 'هنوز چیزی برای نمایش نیست.',
+    'language' => 'زبان',
+    'settings' => 'تنظیمات',
+    'login' => 'ورود',
+    'logout' => 'خروج',
+    'retry' => 'تلاش دوباره',
+    'cancel' => 'لغو',
+    'confirm' => 'تأیید',
+    'save' => 'ذخیره',
+    'language_changed' => 'زبان به‌روزرسانی شد',
+    'logged_out' => 'خارج شدید.',
+    'verification_notice_sent' => 'اعلان تأیید ارسال شد.',
+    'email_verified' => 'ایمیل تأیید شد.',
+    'password_reset_sent' => 'اگر حساب وجود داشته باشد، لینک بازنشانی ارسال شده است.',
+    'invalid_credentials' => 'اطلاعات ورود نامعتبر است.',
+    'only_followers_can_chat' => 'فقط دنبال‌کنندگان می‌توانند در این اتاق زنده چت کنند.',
+    'links_not_allowed' => 'لینک‌ها در این اتاق زنده مجاز نیستند.',
+    'duplicate_messages' => 'پیام‌های تکراری مجاز نیستند.',
+    'sending_too_quickly' => 'پیام‌ها را خیلی سریع می‌فرستید.',
+    'locale_updated' => 'زبان به‌روزرسانی شد.',
+    'settings_updated' => 'تنظیمات به‌روزرسانی شد.',
+];

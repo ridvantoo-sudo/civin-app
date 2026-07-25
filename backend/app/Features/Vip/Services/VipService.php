@@ -2,6 +2,7 @@
 
 namespace App\Features\Vip\Services;
 
+use App\Features\Profiles\Models\Profile;
 use App\Features\Users\Models\User;
 use App\Features\Vip\DTOs\PurchaseVipData;
 use App\Features\Vip\DTOs\UpgradeVipData;
@@ -87,6 +88,7 @@ final readonly class VipService
     public function purchase(User $user, PurchaseVipData $data): UserVip
     {
         $this->ensureEligible($user);
+        $this->ensureNotSvip($user);
         $this->enforceRateLimit(sprintf(self::PURCHASE_RATE_KEY, $user->getKey()), 'purchase');
 
         $level = $this->vips->findActiveLevel($data->vipLevelId);
@@ -105,6 +107,7 @@ final readonly class VipService
     public function upgrade(User $user, UpgradeVipData $data): UserVip
     {
         $this->ensureEligible($user);
+        $this->ensureNotSvip($user);
         $this->enforceRateLimit(sprintf(self::UPGRADE_RATE_KEY, $user->getKey()), 'upgrade');
 
         $subscription = $this->vips->findForUser($user);
@@ -158,6 +161,20 @@ final readonly class VipService
     {
         if ($user->is_guest || $user->status !== 'active') {
             throw new AuthorizationException('Only active registered users can manage VIP.');
+        }
+    }
+
+    private function ensureNotSvip(User $user): void
+    {
+        $isSvip = Profile::query()
+            ->where('user_id', $user->getKey())
+            ->where('is_svip', true)
+            ->exists();
+
+        if ($isSvip) {
+            throw ValidationException::withMessages([
+                'vip' => 'SVIP members already have access above VIP.',
+            ]);
         }
     }
 

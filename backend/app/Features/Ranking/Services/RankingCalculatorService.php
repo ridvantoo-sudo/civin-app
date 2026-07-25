@@ -30,6 +30,7 @@ final readonly class RankingCalculatorService
             Ranking::TYPE_PK_WINNER => $this->rankings->aggregatePkWinners($from, $to, $query->country, $query->limit),
             Ranking::TYPE_VOICE_HOST => $this->rankings->aggregateVoiceHosts($from, $to, $query->country, $query->limit),
             Ranking::TYPE_POPULAR_USER => $this->rankings->aggregatePopularUsers($from, $to, $query->country, $query->limit),
+            Ranking::TYPE_USER_LEVEL => $this->rankings->aggregateUserLevels($from, $to, $query->country, $query->limit),
             default => throw new InvalidArgumentException("Unsupported ranking type [{$query->type}]."),
         };
     }

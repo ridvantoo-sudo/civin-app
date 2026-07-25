@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Features\Games\Plugins\RedEnvelope\Events;
+
+use App\Features\Games\Models\RedEnvelope;
+use App\Features\Games\Models\RedEnvelopeClaim;
+use App\Features\Games\Plugins\RedEnvelope\Support\RedEnvelopeBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+
+final class EnvelopeClaimed implements ShouldBroadcast, ShouldDispatchAfterCommit
+{
+    use Dispatchable, SerializesModels;
+
+    public function __construct(
+        public readonly RedEnvelope $envelope,
+        public readonly RedEnvelopeClaim $claim,
+    ) {}
+
+    public function broadcastOn(): array
+    {
+        return RedEnvelopeBroadcast::channelsFor($this->envelope, $this->claim->user_id);
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'red_envelope.claimed';
+    }
+
+    /** @return array<string, mixed> */
+    public function broadcastWith(): array
+    {
+        return RedEnvelopeBroadcast::claimPayload($this->envelope, $this->claim);
+    }
+}

@@ -136,15 +136,15 @@ final readonly class LiveChatService
         $settings = $this->messages->settingsFor($room);
 
         if ($settings->followers_only && ! $this->follows->isFollowing($user, $room->host()->firstOrFail())) {
-            throw ValidationException::withMessages(['message' => 'Only followers can chat in this live room.']);
+            throw ValidationException::withMessages(['message' => __('messages.only_followers_can_chat')]);
         }
 
         if (! $settings->allow_links && $this->containsLink($message)) {
-            throw ValidationException::withMessages(['message' => 'Links are not allowed in this live room.']);
+            throw ValidationException::withMessages(['message' => __('messages.links_not_allowed')]);
         }
 
         if ($this->messages->recentDuplicateExists($room, $user, $message, self::DUPLICATE_WINDOW_SECONDS)) {
-            throw ValidationException::withMessages(['message' => 'Duplicate messages are not allowed.']);
+            throw ValidationException::withMessages(['message' => __('messages.duplicate_messages')]);
         }
 
         if ($settings->slow_mode_seconds > 0) {
@@ -158,7 +158,7 @@ final readonly class LiveChatService
 
         $rateKey = sprintf(self::SEND_RATE_KEY, $room->getKey(), $user->getKey());
         if (RateLimiter::tooManyAttempts($rateKey, self::SEND_RATE_MAX)) {
-            throw ValidationException::withMessages(['message' => 'You are sending messages too quickly.']);
+            throw ValidationException::withMessages(['message' => __('messages.sending_too_quickly')]);
         }
 
         RateLimiter::hit($rateKey, self::SEND_RATE_DECAY_SECONDS);

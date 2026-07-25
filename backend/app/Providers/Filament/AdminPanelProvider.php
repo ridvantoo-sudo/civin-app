@@ -6,10 +6,13 @@ use App\Filament\Widgets\ActiveLiveRoomsWidget;
 use App\Filament\Widgets\AdminStatsOverview;
 use App\Filament\Widgets\GiftVolumeWidget;
 use App\Filament\Widgets\OnlineUsersWidget;
+use App\Filament\Widgets\QuizDashboardWidget;
 use App\Filament\Widgets\RevenueWidget;
+use App\Filament\Widgets\RpsDashboardWidget;
 use App\Filament\Widgets\TopAgenciesWidget;
 use App\Filament\Widgets\TopHostsWidget;
 use App\Filament\Widgets\TotalUsersWidget;
+use App\Filament\Widgets\TreasureBoxDashboardWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -53,6 +56,9 @@ class AdminPanelProvider extends PanelProvider
                 GiftVolumeWidget::class,
                 TopHostsWidget::class,
                 TopAgenciesWidget::class,
+                TreasureBoxDashboardWidget::class,
+                QuizDashboardWidget::class,
+                RpsDashboardWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

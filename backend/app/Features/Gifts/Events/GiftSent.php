@@ -18,7 +18,9 @@ final class GiftSent implements ShouldBroadcast, ShouldDispatchAfterCommit
 
     public function broadcastOn(): array
     {
-        return [new PrivateChannel("live.room.{$this->transaction->room_id}")];
+        $prefix = $this->transaction->voice_room_id === null ? 'live' : 'voice';
+
+        return [new PrivateChannel("{$prefix}.room.{$this->transaction->broadcastRoomId()}")];
     }
 
     public function broadcastAs(): string
@@ -38,7 +40,8 @@ final class GiftSent implements ShouldBroadcast, ShouldDispatchAfterCommit
         $animation = $gift->animation();
 
         return [
-            'room_id' => $transaction->room_id,
+            'room_id' => $transaction->broadcastRoomId(),
+            'room_type' => $transaction->voice_room_id === null ? 'live' : 'voice',
             'transaction_id' => $transaction->id,
             'sender' => (new SocialUserResource($transaction->sender))->resolve(),
             'receiver' => (new SocialUserResource($transaction->receiver))->resolve(),

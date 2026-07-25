@@ -27,6 +27,24 @@ class WalletTransaction extends Model
 
     public const TYPE_ADMIN_ADJUSTMENT = 'ADMIN_ADJUSTMENT';
 
+    public const TYPE_FAMILY_CONTRIBUTE = 'FAMILY_CONTRIBUTE';
+
+    public const TYPE_FAMILY_GIFT = 'FAMILY_GIFT';
+
+    public const TYPE_COUPLE_GIFT = 'COUPLE_GIFT';
+
+    public const TYPE_CHALLENGE_REWARD = 'CHALLENGE_REWARD';
+
+    public const TYPE_OFFLINE_RECHARGE = 'OFFLINE_RECHARGE';
+
+    public const TYPE_MARKETPLACE_PURCHASE = 'MARKETPLACE_PURCHASE';
+
+    public const TYPE_LIVE_SHOPPING_PURCHASE = 'LIVE_SHOPPING_PURCHASE';
+
+    public const TYPE_COIN_SELLER_PURCHASE = 'COIN_SELLER_PURCHASE';
+
+    public const TYPE_GROWTH_REWARD = 'GROWTH_REWARD';
+
     public const CURRENCY_COINS = 'coins';
 
     public const CURRENCY_DIAMONDS = 'diamonds';

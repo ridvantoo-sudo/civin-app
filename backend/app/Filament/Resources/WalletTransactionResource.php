@@ -77,6 +77,8 @@ class WalletTransactionResource extends Resource
                         WalletTransaction::TYPE_PK_REWARD => 'PK reward',
                         WalletTransaction::TYPE_WITHDRAW => 'Withdraw',
                         WalletTransaction::TYPE_ADMIN_ADJUSTMENT => 'Admin adjustment',
+                        WalletTransaction::TYPE_OFFLINE_RECHARGE => 'Offline recharge',
+                        WalletTransaction::TYPE_MARKETPLACE_PURCHASE => 'Marketplace purchase',
                     ]),
                 Tables\Filters\SelectFilter::make('currency')
                     ->options([

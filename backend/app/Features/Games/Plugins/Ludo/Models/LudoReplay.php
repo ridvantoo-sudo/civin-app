@@ -1,0 +1,28 @@
+<?php
+
+namespace App\Features\Games\Plugins\Ludo\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class LudoReplay extends Model
+{
+    use HasUuids;
+
+    protected $table = 'ludo_replays';
+
+    protected $guarded = [];
+
+    protected function casts(): array
+    {
+        return [
+            'events' => 'array', 'metadata' => 'array', 'started_at' => 'datetime', 'finished_at' => 'datetime',
+        ];
+    }
+
+    public function match(): BelongsTo
+    {
+        return $this->belongsTo(LudoMatch::class, 'match_id');
+    }
+}

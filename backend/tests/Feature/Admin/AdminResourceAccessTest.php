@@ -5,10 +5,13 @@ namespace Tests\Feature\Admin;
 use App\Features\Admin\Support\AdminPermission;
 use App\Features\Admin\Support\AdminRole;
 use App\Features\Users\Models\User;
+use App\Filament\Resources\AdCampaignResource;
 use App\Filament\Resources\AgencyResource;
 use App\Filament\Resources\GiftResource;
 use App\Filament\Resources\LiveRoomResource;
+use App\Filament\Resources\OfflineRechargeResource;
 use App\Filament\Resources\ReportResource;
+use App\Filament\Resources\SvipLevelResource;
 use App\Filament\Resources\UserResource;
 use App\Filament\Resources\VipLevelResource;
 use App\Filament\Resources\WalletTransactionResource;
@@ -48,7 +51,10 @@ class AdminResourceAccessTest extends TestCase
             GiftResource::getUrl('index'),
             WalletTransactionResource::getUrl('index'),
             WithdrawalResource::getUrl('index'),
+            OfflineRechargeResource::getUrl('index'),
             VipLevelResource::getUrl('index'),
+            SvipLevelResource::getUrl('index'),
+            AdCampaignResource::getUrl('index'),
             AgencyResource::getUrl('index'),
             ReportResource::getUrl('index'),
         ] as $url) {
@@ -64,7 +70,10 @@ class AdminResourceAccessTest extends TestCase
         $this->actingAs($admin)->get(GiftResource::getUrl('index'))->assertOk();
         $this->actingAs($admin)->get(WalletTransactionResource::getUrl('index'))->assertOk();
         $this->actingAs($admin)->get(WithdrawalResource::getUrl('index'))->assertOk();
+        $this->actingAs($admin)->get(OfflineRechargeResource::getUrl('index'))->assertOk();
         $this->actingAs($admin)->get(VipLevelResource::getUrl('index'))->assertOk();
+        $this->actingAs($admin)->get(SvipLevelResource::getUrl('index'))->assertOk();
+        $this->actingAs($admin)->get(AdCampaignResource::getUrl('index'))->assertOk();
 
         $this->actingAs($admin)->get(UserResource::getUrl('index'))->assertForbidden();
         $this->actingAs($admin)->get(LiveRoomResource::getUrl('index'))->assertForbidden();
@@ -81,6 +90,7 @@ class AdminResourceAccessTest extends TestCase
         $this->actingAs($admin)->get(ReportResource::getUrl('index'))->assertOk();
         $this->actingAs($admin)->get(GiftResource::getUrl('index'))->assertForbidden();
         $this->actingAs($admin)->get(WithdrawalResource::getUrl('index'))->assertForbidden();
+        $this->actingAs($admin)->get(OfflineRechargeResource::getUrl('index'))->assertForbidden();
     }
 
     public function test_support_admin_can_access_users_reports_and_agencies(): void

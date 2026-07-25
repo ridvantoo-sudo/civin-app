@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Features\Countries\Models\Country;
+use App\Features\Countries\Models\CountryRegion;
 use App\Features\Followers\Events\FollowRequested;
 use App\Features\Followers\Events\UserFollowed;
 use App\Features\Followers\Notifications\FollowRequestNotification;
@@ -58,6 +59,41 @@ class UserSocialSystemTest extends TestCase
             ->assertJsonPath('data.nickname', 'Target Nick')
             ->assertJsonPath('data.is_online', true)
             ->assertJsonPath('data.is_live', true);
+    }
+
+    public function test_kurdistan_region_is_stored_under_iraq_iso_country(): void
+    {
+        [$user] = $this->socialUser('kurdistan-user');
+        $iraq = Country::query()->where('alpha2', 'IQ')->firstOrFail();
+        $region = CountryRegion::query()->where('code', 'IQ-KRI')->firstOrFail();
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/v1/countries')
+            ->assertOk()
+            ->assertJsonFragment([
+                'alpha2' => 'IQ',
+                'alpha3' => 'IRQ',
+                'name' => 'Iraq',
+            ])
+            ->assertJsonFragment([
+                'code' => 'IQ-KRI',
+                'name' => 'Kurdistan Region of Iraq',
+            ]);
+
+        $this->patchJson('/api/v1/profile', [
+            'country_id' => $iraq->id,
+            'country_region_id' => $region->id,
+        ])->assertOk()
+            ->assertJsonPath('data.country.alpha2', 'IQ')
+            ->assertJsonPath('data.country.alpha3', 'IRQ')
+            ->assertJsonPath('data.country_region.code', 'IQ-KRI');
+
+        $this->assertDatabaseHas('profiles', [
+            'user_id' => $user->id,
+            'country_id' => $iraq->id,
+            'country_region_id' => $region->id,
+        ]);
+        $this->assertDatabaseMissing('countries', ['alpha2' => 'KU']);
     }
 
     public function test_public_follow_is_idempotent_notifies_and_maintains_counters(): void

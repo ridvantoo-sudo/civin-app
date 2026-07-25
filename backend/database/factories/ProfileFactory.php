@@ -20,6 +20,7 @@ class ProfileFactory extends Factory
             'cover_image_url' => fake()->optional()->imageUrl(1200, 400),
             'level' => fake()->numberBetween(1, 100),
             'is_vip' => false,
+            'is_svip' => false,
             'is_private' => false,
             'followers_count' => 0,
             'following_count' => 0,

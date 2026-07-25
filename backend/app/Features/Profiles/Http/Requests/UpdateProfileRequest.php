@@ -3,6 +3,7 @@
 namespace App\Features\Profiles\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateProfileRequest extends FormRequest
 {
@@ -23,6 +24,17 @@ class UpdateProfileRequest extends FormRequest
             'birthday' => ['sometimes', 'nullable', 'date', 'before:today'],
             'gender' => ['sometimes', 'nullable', 'in:male,female,non_binary,prefer_not_to_say'],
             'country_id' => ['sometimes', 'nullable', 'uuid', 'exists:countries,id,deleted_at,NULL'],
+            'country_region_id' => [
+                'sometimes',
+                'nullable',
+                'uuid',
+                Rule::exists('country_regions', 'id')->where(
+                    fn ($query) => $query
+                        ->where('country_id', $this->input('country_id'))
+                        ->whereNull('deleted_at')
+                        ->where('active', true),
+                ),
+            ],
             'is_private' => ['sometimes', 'boolean'],
         ];
     }

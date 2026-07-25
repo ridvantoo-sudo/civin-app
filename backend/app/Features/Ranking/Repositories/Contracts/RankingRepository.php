@@ -4,6 +4,7 @@ namespace App\Features\Ranking\Repositories\Contracts;
 
 use App\Features\Ranking\DTOs\RankingQueryData;
 use App\Features\Ranking\DTOs\RankingScoreData;
+use App\Features\Ranking\Models\Ranking;
 use App\Features\Ranking\Models\RankingSnapshot;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -23,7 +24,7 @@ interface RankingRepository
     public function createSnapshot(string $type, string $period, array $data): RankingSnapshot;
 
     /**
-     * @return Collection<int, \App\Features\Ranking\Models\Ranking>
+     * @return Collection<int, Ranking>
      */
     public function listStored(RankingQueryData $query, CarbonInterface $date): Collection;
 
@@ -56,4 +57,9 @@ interface RankingRepository
      * @return Collection<int, RankingScoreData>
      */
     public function aggregatePopularUsers(?CarbonInterface $from, ?CarbonInterface $to, ?string $country, int $limit): Collection;
+
+    /**
+     * @return Collection<int, RankingScoreData>
+     */
+    public function aggregateUserLevels(?CarbonInterface $from, ?CarbonInterface $to, ?string $country, int $limit): Collection;
 }
