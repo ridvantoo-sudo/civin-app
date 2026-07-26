@@ -29,5 +29,4 @@ backend/storage/logs/*
 backend/tests
 backend/docs
 backend/deploy
-backend/fly.toml
 backend/phpunit.xml

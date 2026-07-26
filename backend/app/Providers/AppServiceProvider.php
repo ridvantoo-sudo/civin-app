@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Features\Admin\Support\AdminRole;
+use App\Support\CacheStoreFailover;
 use App\Features\Ads\Models\AdCampaign;
 use App\Features\Ads\Policies\AdCampaignPolicy;
 use App\Features\Ads\Repositories\Contracts\AdRepository;
@@ -370,6 +371,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Must run before Filament/Livewire touch the cache store. A dead Redis
+        // (common on Laravel Cloud before a cache addon is attached) otherwise
+        // surfaces as admin HTTP 500 / Livewire 419.
+        CacheStoreFailover::ensureReachable();
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 ProcessLuckyNumberDrawsCommand::class,

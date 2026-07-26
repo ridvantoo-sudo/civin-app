@@ -7,12 +7,12 @@ return [
     */
     'queue' => env('GAME_ANALYTICS_QUEUE', 'analytics'),
 
-    'queue_connection' => env('GAME_ANALYTICS_QUEUE_CONNECTION', env('QUEUE_CONNECTION', 'redis')),
+    'queue_connection' => env('GAME_ANALYTICS_QUEUE_CONNECTION', env('QUEUE_CONNECTION', 'database')),
 
     /*
     | Cache store for realtime counters / dashboard snapshots.
     */
-    'cache_store' => env('GAME_ANALYTICS_CACHE_STORE', env('CACHE_STORE', 'redis')),
+    'cache_store' => env('GAME_ANALYTICS_CACHE_STORE', env('CACHE_STORE', 'database')),
 
     'cache_ttl_seconds' => (int) env('GAME_ANALYTICS_CACHE_TTL', 60),
 
@@ -22,6 +22,8 @@ return [
     'ignored_event_prefixes' => [
         'Illuminate\\',
         'Laravel\\',
+        'Filament\\',
+        'Livewire\\',
         'eloquent.',
         'bootstrapped:',
         'composing:',

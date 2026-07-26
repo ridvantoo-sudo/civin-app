@@ -8,6 +8,7 @@ use App\Features\GameAnalytics\Repositories\Contracts\AnalyticsRepository;
 use App\Features\GameAnalytics\Support\EventNormalizer;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Support\Facades\Cache;
+use Throwable;
 
 /**
  * Lightweight ingestion entrypoint. Heavy work is always queued.
@@ -34,9 +35,16 @@ final class AnalyticsCollector
 
     public function queueNormalized(NormalizedAnalyticsEvent $event): void
     {
-        PersistAnalyticsEventJob::dispatch($event)
-            ->onConnection((string) config('game_analytics.queue_connection', 'redis'))
-            ->onQueue((string) config('game_analytics.queue', 'analytics'));
+        // Analytics ingestion is fire-and-forget. A broker/queue outage (for
+        // example during deploy build steps where Redis is unavailable) must
+        // never break the originating request or console command.
+        try {
+            PersistAnalyticsEventJob::dispatch($event)
+                ->onConnection((string) config('game_analytics.queue_connection', 'database'))
+                ->onQueue((string) config('game_analytics.queue', 'analytics'));
+        } catch (Throwable $e) {
+            report($e);
+        }
     }
 
     public function persist(NormalizedAnalyticsEvent $event): void

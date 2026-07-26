@@ -20,6 +20,5 @@ phpunit.xml
 npm-debug.log
 yarn-error.log
 Dockerfile*
-fly.toml
 deploy
 docs

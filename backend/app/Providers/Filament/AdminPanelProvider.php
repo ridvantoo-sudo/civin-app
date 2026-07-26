@@ -14,7 +14,6 @@ use App\Filament\Widgets\TopHostsWidget;
 use App\Filament\Widgets\TotalUsersWidget;
 use App\Filament\Widgets\TreasureBoxDashboardWidget;
 use Filament\Http\Middleware\Authenticate;
-use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
@@ -64,7 +63,10 @@ class AdminPanelProvider extends PanelProvider
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
-                AuthenticateSession::class,
+                // Intentionally omit AuthenticateSession: it is a common source of
+                // Livewire HTTP 419 "page expired" on multi-instance hosts
+                // (Laravel Cloud) when the password hash / session fingerprint
+                // races across concurrent Analytics/Security poll requests.
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,

@@ -33,9 +33,9 @@ return [
     */
     'queue' => env('SECURITY_QUEUE', 'security'),
 
-    'queue_connection' => env('SECURITY_QUEUE_CONNECTION', env('QUEUE_CONNECTION', 'redis')),
+    'queue_connection' => env('SECURITY_QUEUE_CONNECTION', env('QUEUE_CONNECTION', 'database')),
 
-    'cache_store' => env('SECURITY_CACHE_STORE', env('CACHE_STORE', 'redis')),
+    'cache_store' => env('SECURITY_CACHE_STORE', env('CACHE_STORE', 'database')),
 
     /*
     | Master switch. When disabled the wildcard listener returns immediately so
@@ -57,6 +57,7 @@ return [
         'Illuminate\\',
         'Laravel\\',
         'Filament\\',
+        'Livewire\\',
         'eloquent.',
         'bootstrapped:',
         'composing:',

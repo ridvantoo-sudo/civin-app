@@ -57,7 +57,12 @@ class SecurityAlertResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $open = SecurityAlert::query()->open()->count();
+        try {
+            $open = SecurityAlert::query()->open()->count();
+        } catch (\Throwable) {
+            // Badge must never take down the whole admin shell (missing table, locked DB, etc.).
+            return null;
+        }
 
         return $open > 0 ? (string) $open : null;
     }

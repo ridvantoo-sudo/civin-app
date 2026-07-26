@@ -42,9 +42,14 @@ final class SecurityCollector
 
     public function queue(SecurityEventData $event): void
     {
-        AnalyzeSecurityEventJob::dispatch($event)
-            ->onConnection((string) config('security_platform.queue_connection', 'redis'))
-            ->onQueue((string) config('security_platform.queue', 'security'));
+        // Queue outages must never break Filament/API requests.
+        try {
+            AnalyzeSecurityEventJob::dispatch($event)
+                ->onConnection((string) config('security_platform.queue_connection', 'database'))
+                ->onQueue((string) config('security_platform.queue', 'security'));
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /**

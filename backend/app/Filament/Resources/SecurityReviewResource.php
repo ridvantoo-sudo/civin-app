@@ -57,7 +57,12 @@ class SecurityReviewResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $pending = SecurityReview::query()->pending()->count();
+        try {
+            $pending = SecurityReview::query()->pending()->count();
+        } catch (\Throwable) {
+            // Badge must never take down the whole admin shell (missing table, locked DB, etc.).
+            return null;
+        }
 
         return $pending > 0 ? (string) $pending : null;
     }

@@ -3,6 +3,7 @@
 namespace App\Features\GameAnalytics\Listeners;
 
 use App\Features\GameAnalytics\Services\AnalyticsCollector;
+use Throwable;
 
 /**
  * Sync, assumption-light wildcard hook. Only normalizes then queues persistence
@@ -17,6 +18,10 @@ final class CollectDomainEventForAnalytics
      */
     public function handle(string $eventName, array $payload = []): void
     {
-        $this->collector->collectFromDomainEvent($eventName, $payload);
+        try {
+            $this->collector->collectFromDomainEvent($eventName, $payload);
+        } catch (Throwable) {
+            // Observation must never break Filament/API requests.
+        }
     }
 }
