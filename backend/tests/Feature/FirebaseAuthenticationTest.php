@@ -172,6 +172,75 @@ class FirebaseAuthenticationTest extends TestCase
         $this->assertSame(1, RefreshToken::query()->whereNull('revoked_at')->count());
     }
 
+    public function test_soft_deleted_firebase_user_is_restored_on_login(): void
+    {
+        $user = User::factory()->create([
+            'firebase_uid' => 'firebase-uid-123',
+            'email' => 'firebase@example.com',
+            'status' => User::STATUS_DELETED,
+        ]);
+        $user->profile()->create(['display_name' => 'Restored Person']);
+        $user->delete();
+
+        $this->assertSoftDeleted('users', ['id' => $user->id]);
+
+        $this->postJson('/api/v1/auth/firebase/login', $this->payload)
+            ->assertOk()
+            ->assertJsonPath('user.id', $user->id)
+            ->assertJsonPath('profile.display_name', 'Restored Person');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'firebase_uid' => 'firebase-uid-123',
+            'status' => User::STATUS_ACTIVE,
+            'deleted_at' => null,
+        ]);
+        $this->assertDatabaseCount('users', 1);
+    }
+
+    public function test_soft_deleted_email_holder_is_restored_and_linked(): void
+    {
+        $stale = User::factory()->create([
+            'email' => 'firebase@example.com',
+            'firebase_uid' => null,
+            'status' => User::STATUS_DELETED,
+        ]);
+        $stale->profile()->create(['display_name' => 'Stale Person']);
+        // Simulate an incomplete delete that left the unique email occupied.
+        $stale->delete();
+
+        $this->postJson('/api/v1/auth/firebase/login', $this->payload)
+            ->assertOk()
+            ->assertJsonPath('user.id', $stale->id)
+            ->assertJsonPath('user.email', 'firebase@example.com');
+
+        $this->assertDatabaseHas('users', [
+            'id' => $stale->id,
+            'firebase_uid' => 'firebase-uid-123',
+            'email' => 'firebase@example.com',
+            'status' => User::STATUS_ACTIVE,
+            'deleted_at' => null,
+        ]);
+        $this->assertDatabaseCount('users', 1);
+    }
+
+    public function test_existing_email_account_is_linked_to_firebase_identity(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'firebase@example.com',
+            'firebase_uid' => null,
+        ]);
+        $user->profile()->create(['display_name' => 'Email Person']);
+
+        $this->postJson('/api/v1/auth/firebase/login', $this->payload)
+            ->assertOk()
+            ->assertJsonPath('user.id', $user->id)
+            ->assertJsonPath('profile.display_name', 'Email Person');
+
+        $this->assertSame('firebase-uid-123', $user->fresh()->firebase_uid);
+        $this->assertDatabaseCount('users', 1);
+    }
+
     private function fakeFirebase(FirebaseIdentity $identity): void
     {
         $this->app->instance(FirebaseTokenVerifier::class, new class($identity) implements FirebaseTokenVerifier

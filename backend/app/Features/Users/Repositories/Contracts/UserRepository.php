@@ -12,6 +12,8 @@ interface UserRepository
 
     public function findByFirebaseUid(string $uid, bool $lockForUpdate = false): ?User;
 
+    public function findByEmail(string $email, bool $withTrashed = false, bool $lockForUpdate = false): ?User;
+
     public function find(string $id): ?User;
 
     public function findForUpdate(string $id): ?User;
@@ -21,6 +23,8 @@ interface UserRepository
     public function emailExists(string $email): bool;
 
     public function usernameExists(string $username): bool;
+
+    public function releaseSoftDeletedEmail(string $email): void;
 
     public function update(User $user, array $attributes): User;
 }

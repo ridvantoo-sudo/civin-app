@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 final readonly class AuthenticationService
 {
@@ -93,34 +94,26 @@ final readonly class AuthenticationService
             ]);
 
             throw ValidationException::withMessages(['id_token' => ['The Firebase ID token is invalid or expired.']]);
+        } catch (RuntimeException $exception) {
+            // Misconfigured Cloud env (missing/invalid FIREBASE_CREDENTIALS).
+            Log::error('Firebase credentials are not usable.', [
+                'message' => $exception->getMessage(),
+                'ip_address' => $device->ipAddress,
+            ]);
+
+            throw ValidationException::withMessages([
+                'id_token' => [
+                    'Firebase authentication is not configured on the server. Set FIREBASE_CREDENTIALS.',
+                ],
+            ]);
         }
 
         try {
             $tokens = DB::transaction(function () use ($identity, $device): TokenPair {
-                $user = $this->users->findByFirebaseUid($identity->uid, true);
+                $user = $this->resolveFirebaseUser($identity);
 
-                if (! $user) {
-                    $email = $identity->email && ! $this->users->emailExists($identity->email)
-                        ? $identity->email
-                        : null;
-                    $user = $this->users->create([
-                        'firebase_uid' => $identity->uid,
-                        'email' => $email,
-                        'username' => $this->firebaseUsername($identity),
-                        'email_verified_at' => $email && $identity->emailVerified ? now() : null,
-                        'last_login_at' => now(),
-                        'is_guest' => false,
-                    ]);
-                    $this->profiles->createForUser(
-                        $user,
-                        $identity->name ?? ($email ? Str::before($email, '@') : 'Firebase User'),
-                        $identity->avatar,
-                    );
-                    $this->wallets->createForUser($user);
-                } elseif ($user->status !== 'active') {
+                if ($user->status === User::STATUS_BANNED || $user->isBanned()) {
                     throw ValidationException::withMessages(['id_token' => ['The account is not active.']]);
-                } else {
-                    $user = $this->users->update($user, ['last_login_at' => now()]);
                 }
 
                 $user->tokens()->delete();
@@ -129,7 +122,13 @@ final readonly class AuthenticationService
                 return $this->issue($user, $device);
             });
         } catch (QueryException $exception) {
-            if (in_array($exception->getCode(), ['23000', '23505'], true)) {
+            Log::warning('Firebase identity linking hit a database constraint.', [
+                'sql_state' => (string) ($exception->errorInfo[0] ?? $exception->getCode()),
+                'message' => $exception->getMessage(),
+                'ip_address' => $device->ipAddress,
+            ]);
+
+            if ($this->isUniqueConstraintViolation($exception)) {
                 throw ValidationException::withMessages([
                     'id_token' => ['This Firebase identity could not be linked. Please retry.'],
                 ]);
@@ -230,6 +229,127 @@ final readonly class AuthenticationService
         event(new FirebaseLinked($user));
 
         return $user;
+    }
+
+    private function resolveFirebaseUser(FirebaseIdentity $identity): User
+    {
+        $user = $this->users->findByFirebaseUid($identity->uid, true);
+
+        if (! $user && $identity->email) {
+            $byEmail = $this->users->findByEmail($identity->email, withTrashed: true, lockForUpdate: true);
+
+            // Link an existing email account only when it is not already tied to
+            // a different Firebase identity.
+            if ($byEmail && (! $byEmail->firebase_uid || $byEmail->firebase_uid === $identity->uid)) {
+                $user = $byEmail;
+            }
+        }
+
+        if ($user) {
+            return $this->reactivateFirebaseUser($user, $identity);
+        }
+
+        return $this->createFirebaseUser($identity);
+    }
+
+    private function reactivateFirebaseUser(User $user, FirebaseIdentity $identity): User
+    {
+        if ($user->trashed()) {
+            $user->restore();
+            $user->refresh();
+        }
+
+        $attributes = [
+            'last_login_at' => now(),
+            'is_guest' => false,
+        ];
+
+        if ($user->status === User::STATUS_DELETED || $user->status === '') {
+            $attributes['status'] = User::STATUS_ACTIVE;
+        }
+
+        if (! $user->firebase_uid) {
+            $attributes['firebase_uid'] = $identity->uid;
+        }
+
+        if ($identity->email && $user->email === $identity->email && $identity->emailVerified && ! $user->email_verified_at) {
+            $attributes['email_verified_at'] = now();
+        }
+
+        if (! $user->email && $identity->email) {
+            $this->users->releaseSoftDeletedEmail($identity->email);
+            if (! $this->users->emailExists($identity->email)) {
+                $attributes['email'] = $identity->email;
+                if ($identity->emailVerified) {
+                    $attributes['email_verified_at'] = now();
+                }
+            }
+        }
+
+        $user = $this->users->update($user, $attributes);
+        $this->ensureProfileAndWallet(
+            $user,
+            $identity->name ?? ($identity->email ? Str::before($identity->email, '@') : 'Firebase User'),
+            $identity->avatar,
+        );
+
+        return $user;
+    }
+
+    private function createFirebaseUser(FirebaseIdentity $identity): User
+    {
+        $email = null;
+        if ($identity->email) {
+            // Soft-deleted rows can still occupy the unique email slot.
+            $this->users->releaseSoftDeletedEmail($identity->email);
+            if (! $this->users->emailExists($identity->email)) {
+                $email = $identity->email;
+            }
+        }
+
+        $user = $this->users->create([
+            'firebase_uid' => $identity->uid,
+            'email' => $email,
+            'username' => $this->firebaseUsername($identity),
+            'email_verified_at' => $email && $identity->emailVerified ? now() : null,
+            'last_login_at' => now(),
+            'status' => User::STATUS_ACTIVE,
+            'is_guest' => false,
+        ]);
+
+        $this->ensureProfileAndWallet(
+            $user,
+            $identity->name ?? ($email ? Str::before($email, '@') : 'Firebase User'),
+            $identity->avatar,
+        );
+
+        return $user;
+    }
+
+    private function ensureProfileAndWallet(User $user, string $displayName, ?string $avatarUrl): void
+    {
+        if (! $user->profile()->exists()) {
+            $this->profiles->createForUser($user, $displayName, $avatarUrl);
+        }
+
+        $this->wallets->findOrCreateForUser($user);
+    }
+
+    private function isUniqueConstraintViolation(QueryException $exception): bool
+    {
+        $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
+
+        if (in_array($sqlState, ['23000', '23505'], true)) {
+            return true;
+        }
+
+        $message = Str::lower($exception->getMessage());
+
+        return Str::contains($message, [
+            'unique',
+            'duplicate',
+            'integrity constraint',
+        ]);
     }
 
     private function firebaseUsername(FirebaseIdentity $identity): string

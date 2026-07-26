@@ -15,18 +15,20 @@ final class KreaitFirebaseTokenVerifier implements FirebaseTokenVerifier
     {
         $credentials = config('services.firebase.credentials');
 
-        if (! is_string($credentials) || $credentials === '') {
+        if (! is_string($credentials) || trim($credentials) === '') {
             throw new RuntimeException('Firebase credentials are not configured.');
         }
 
         try {
             $token = (new Factory)
-                ->withServiceAccount($credentials)
+                ->withServiceAccount($this->resolveServiceAccount($credentials))
                 ->createAuth()
                 ->verifyIdToken($idToken);
             $claims = $token->claims();
             $uid = $claims->get('sub');
             $expiresAt = $claims->get('exp');
+        } catch (InvalidFirebaseToken $exception) {
+            throw $exception;
         } catch (Throwable $exception) {
             throw new InvalidFirebaseToken('The Firebase ID token is invalid.', previous: $exception);
         }
@@ -56,5 +58,42 @@ final class KreaitFirebaseTokenVerifier implements FirebaseTokenVerifier
     private function nullableString(mixed $value): ?string
     {
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * Accept the service account as a file path (traditional servers), a raw
+     * JSON string, or base64-encoded JSON. Platforms like Laravel Cloud have no
+     * persistent filesystem for a key file, so the credentials are typically
+     * pasted directly into a single environment variable.
+     *
+     * @return string|array<string, mixed>
+     */
+    private function resolveServiceAccount(string $credentials): string|array
+    {
+        $value = trim($credentials);
+
+        // 1. Absolute/relative path to a service-account JSON file.
+        if (is_file($value)) {
+            return $value;
+        }
+
+        // 2. Raw JSON string.
+        $decoded = json_decode($value, true);
+        if (is_array($decoded) && isset($decoded['private_key'], $decoded['client_email'])) {
+            return $decoded;
+        }
+
+        // 3. Base64-encoded JSON string.
+        $binary = base64_decode($value, true);
+        if ($binary !== false) {
+            $decoded = json_decode($binary, true);
+            if (is_array($decoded) && isset($decoded['private_key'], $decoded['client_email'])) {
+                return $decoded;
+            }
+        }
+
+        throw new RuntimeException(
+            'FIREBASE_CREDENTIALS must be a service-account JSON file path, raw JSON, or base64 JSON.',
+        );
     }
 }
