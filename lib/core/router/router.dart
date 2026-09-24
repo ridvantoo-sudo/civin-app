@@ -18,10 +18,16 @@ import 'package:civin/features/authentication/presentation/register_page.dart';
 import 'package:civin/features/authentication/presentation/reset_password_page.dart';
 import 'package:civin/features/authentication/presentation/verify_email_page.dart';
 import 'package:civin/features/authentication/repository/auth_repository_impl.dart';
+import 'package:civin/features/challenges/presentation/screens/challenges_screen.dart';
+import 'package:civin/features/family/presentation/screens/family_home_screen.dart';
+import 'package:civin/features/games/domain/entities/civin_game.dart';
+import 'package:civin/features/games/presentation/screens/game_play_screen.dart';
+import 'package:civin/features/games/presentation/screens/games_home_screen.dart';
 import 'package:civin/features/home/presentation/home_page.dart';
 import 'package:civin/features/live/domain/entities/live_room.dart';
 import 'package:civin/features/live/presentation/screens/create_live_screen.dart';
 import 'package:civin/features/live/presentation/screens/live_home_screen.dart';
+import 'package:civin/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:civin/features/onboarding/presentation/onboarding_page.dart';
 import 'package:civin/features/pk/presentation/screens/live_room_with_pk_screen.dart';
 import 'package:civin/features/profile/presentation/edit_profile_page.dart';
@@ -35,6 +41,7 @@ import 'package:civin/features/rankings/presentation/screens/host_ranking_screen
 import 'package:civin/features/rankings/presentation/screens/pk_ranking_screen.dart';
 import 'package:civin/features/rankings/presentation/screens/ranking_home_screen.dart';
 import 'package:civin/features/rankings/presentation/screens/voice_ranking_screen.dart';
+import 'package:civin/features/settings/presentation/screens/preferences_screen.dart';
 import 'package:civin/features/splash/presentation/splash_page.dart';
 import 'package:civin/features/vip/presentation/screens/vip_home_screen.dart';
 import 'package:civin/features/vip/presentation/screens/vip_levels_screen.dart';
@@ -94,6 +101,13 @@ abstract final class AppRoutes {
   static const String agencyProfile = '/agency/profile';
   static const String agencyHosts = '/agency/hosts';
   static const String agencyEarnings = '/agency/earnings';
+  static const String games = '/games';
+  static const String challenges = '/challenges';
+  static const String family = '/family';
+  static const String notifications = '/notifications';
+  static const String preferences = '/settings';
+
+  static String gamePath(String slug) => '/games/$slug';
 
   static String userDetailsPath(String userId) => '/users/$userId';
   static String agencyProfilePath(String agencyId) =>
@@ -150,6 +164,11 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
             AppRoutes.agencyProfile,
             AppRoutes.agencyHosts,
             AppRoutes.agencyEarnings,
+            AppRoutes.games,
+            AppRoutes.challenges,
+            AppRoutes.family,
+            AppRoutes.notifications,
+            AppRoutes.preferences,
           }.contains(location) ||
           location.startsWith('/users/') ||
           location.startsWith('/live/') ||
@@ -157,7 +176,8 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
           location.startsWith('/voice/') ||
           location.startsWith('/rankings') ||
           location.startsWith('/vip') ||
-          location.startsWith('/agency');
+          location.startsWith('/agency') ||
+          location.startsWith('/games');
       if (protected && user == null) return AppRoutes.login;
 
       if (user != null) {
@@ -383,35 +403,71 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
       GoRoute(
         path: AppRoutes.agencyProfile,
         name: 'agency-profile',
-        pageBuilder: (BuildContext context, GoRouterState state) =>
-            _socialPage(
-              state,
-              AgencyProfile(
-                agencyId: state.uri.queryParameters['agencyId'],
-              ),
-            ),
+        pageBuilder: (BuildContext context, GoRouterState state) => _socialPage(
+          state,
+          AgencyProfile(agencyId: state.uri.queryParameters['agencyId']),
+        ),
       ),
       GoRoute(
         path: AppRoutes.agencyHosts,
         name: 'agency-hosts',
-        pageBuilder: (BuildContext context, GoRouterState state) =>
-            _socialPage(
-              state,
-              AgencyHosts(
-                agencyId: state.uri.queryParameters['agencyId'],
-              ),
-            ),
+        pageBuilder: (BuildContext context, GoRouterState state) => _socialPage(
+          state,
+          AgencyHosts(agencyId: state.uri.queryParameters['agencyId']),
+        ),
       ),
       GoRoute(
         path: AppRoutes.agencyEarnings,
         name: 'agency-earnings',
+        pageBuilder: (BuildContext context, GoRouterState state) => _socialPage(
+          state,
+          AgencyEarnings(agencyId: state.uri.queryParameters['agencyId']),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.games,
+        name: 'games',
         pageBuilder: (BuildContext context, GoRouterState state) =>
-            _socialPage(
-              state,
-              AgencyEarnings(
-                agencyId: state.uri.queryParameters['agencyId'],
-              ),
+            _socialPage(state, const GamesHomeScreen()),
+      ),
+      GoRoute(
+        path: '/games/:slug',
+        name: 'game-play',
+        pageBuilder: (BuildContext context, GoRouterState state) {
+          final Object? extra = state.extra;
+          return _socialPage(
+            state,
+            GamePlayScreen(
+              slug: state.pathParameters['slug']!,
+              seed: extra is CivinGame ? extra : null,
+              roomId: state.uri.queryParameters['roomId'],
             ),
+          );
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.challenges,
+        name: 'challenges',
+        pageBuilder: (BuildContext context, GoRouterState state) =>
+            _socialPage(state, const ChallengesScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.family,
+        name: 'family',
+        pageBuilder: (BuildContext context, GoRouterState state) =>
+            _socialPage(state, const FamilyHomeScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        name: 'notifications',
+        pageBuilder: (BuildContext context, GoRouterState state) =>
+            _socialPage(state, const NotificationsScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.preferences,
+        name: 'preferences',
+        pageBuilder: (BuildContext context, GoRouterState state) =>
+            _socialPage(state, const PreferencesScreen()),
       ),
       GoRoute(
         path: '/live/:roomId',
@@ -428,10 +484,7 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
                 viewerCount: 0,
                 isLive: true,
               );
-          return _socialPage(
-            state,
-            LiveRoomWithPkScreen(room: room),
-          );
+          return _socialPage(state, LiveRoomWithPkScreen(room: room));
         },
       ),
       GoRoute(
