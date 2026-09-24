@@ -23,7 +23,7 @@ final class ProfilePage extends ConsumerWidget {
         actions: <Widget>[
           IconButton(
             tooltip: 'Settings',
-            onPressed: () => context.push(AppRoutes.accountSecurity),
+            onPressed: () => context.push(AppRoutes.preferences),
             icon: const Icon(Icons.settings_outlined),
           ),
           IconButton(
@@ -183,6 +183,41 @@ final class _ProfileContent extends ConsumerWidget {
             'Settings',
             style: TextStyle(fontWeight: FontWeight.w700),
           ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.notifications_outlined),
+          title: const Text('Notifications'),
+          subtitle: const Text('Follows, gifts, and live alerts'),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => context.push(AppRoutes.notifications),
+        ),
+        ListTile(
+          leading: const Icon(Icons.sports_esports_outlined),
+          title: const Text('Games'),
+          subtitle: const Text('Play with coins inside and outside live'),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => context.push(AppRoutes.games),
+        ),
+        ListTile(
+          leading: const Icon(Icons.flag_outlined),
+          title: const Text('Challenges'),
+          subtitle: const Text('Claim daily and weekly rewards'),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => context.push(AppRoutes.challenges),
+        ),
+        ListTile(
+          leading: const Icon(Icons.groups_outlined),
+          title: const Text('Family'),
+          subtitle: const Text('Club chat, missions, and invites'),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => context.push(AppRoutes.family),
+        ),
+        ListTile(
+          leading: const Icon(Icons.tune_rounded),
+          title: const Text('Preferences'),
+          subtitle: const Text('Theme, language, and privacy'),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => context.push(AppRoutes.preferences),
         ),
         ListTile(
           leading: const Icon(Icons.shield_outlined),

@@ -99,15 +99,68 @@ final class _FeedTab extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: Center(
-          child: Semantics(
-            header: true,
-            child: Text(
-              AppStrings.home,
-              style: Theme.of(context).textTheme.headlineMedium,
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: <Widget>[
+            Text(
+              'Play, finish challenges, and stay with your family.',
+              style: Theme.of(context).textTheme.titleMedium,
             ),
-          ),
+            const SizedBox(height: 16),
+            _HubTile(
+              icon: Icons.sports_esports_rounded,
+              title: 'Games',
+              subtitle: 'Wheel, slots, dice, quiz, and envelopes',
+              onTap: () => context.push(AppRoutes.games),
+            ),
+            _HubTile(
+              icon: Icons.flag_rounded,
+              title: 'Challenges',
+              subtitle: 'Daily and weekly rewards',
+              onTap: () => context.push(AppRoutes.challenges),
+            ),
+            _HubTile(
+              icon: Icons.groups_rounded,
+              title: 'Family',
+              subtitle: 'Chat, missions, and invites',
+              onTap: () => context.push(AppRoutes.family),
+            ),
+            _HubTile(
+              icon: Icons.notifications_rounded,
+              title: 'Notifications',
+              subtitle: 'Follows, gifts, and live alerts',
+              onTap: () => context.push(AppRoutes.notifications),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+final class _HubTile extends StatelessWidget {
+  const _HubTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: Icon(icon),
+        title: Text(title),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: onTap,
       ),
     );
   }

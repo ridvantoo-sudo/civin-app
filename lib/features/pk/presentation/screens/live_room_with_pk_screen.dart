@@ -1,3 +1,4 @@
+import 'package:civin/features/games/presentation/widgets/game_action_button.dart';
 import 'package:civin/features/gifts/presentation/screens/live_room_with_chat_and_gifts_screen.dart';
 import 'package:civin/features/live/domain/entities/live_room.dart';
 import 'package:civin/features/pk/presentation/pk_providers.dart';
@@ -49,6 +50,7 @@ final class _LiveRoomWithPkScreenState
           PkBattleScreen(roomId: widget.room.id),
           PkResultScreen(roomId: widget.room.id),
           PkActionButton(roomId: widget.room.id),
+          GameActionButton(roomId: widget.room.id),
         ],
       ),
     );
