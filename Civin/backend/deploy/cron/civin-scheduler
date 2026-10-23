@@ -1,0 +1,2 @@
+# Install as /etc/cron.d/civin-scheduler with mode 0644.
+* * * * * www-data cd /var/www/civin/backend && /usr/bin/php artisan schedule:run > /dev/null 2>&1
